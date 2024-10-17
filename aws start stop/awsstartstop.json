@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "0.3",
+  "description": "Automation document to start instances, patch them, and then stop them",
+  "assumeRole": "{{ AutomationAssumeRole }}",
+  "parameters": {
+    "InstanceIds": {
+      "type": "StringList",
+      "description": "List of EC2 instance IDs to start, patch, and stop"
+    },
+    "AutomationAssumeRole": {
+      "type": "String",
+      "description": "(Optional) The ARN of the role that allows Automation to perform the actions on your behalf.",
+      "default": ""
+    }
+  },
+  "mainSteps": [
+    {
+      "name": "startInstances",
+      "action": "aws:changeInstanceState",
+      "inputs": {
+        "InstanceIds": "{{ InstanceIds }}",
+        "DesiredState": "running"
+      },
+      "nextStep": "addTagToStartedInstances"
+    },
+    {
+      "name": "addTagToStartedInstances",
+      "action": "aws:executeAwsApi",
+      "inputs": {
+        "Service": "ec2",
+        "Api": "createTags",
+        "Resources": "{{ InstanceIds }}",
+        "Tags": [
+          {
+            "Key": "StartStatus",
+            "Value": "Started-{{ global:DATE }}"
+          }
+        ]
+      },
+      "nextStep": "waitForInstancesToStart"
+    },
+    {
+      "name": "waitForInstancesToStart",
+      "action": "aws:waitForAwsResourceProperty",
+      "inputs": {
+        "Service": "ec2",
+        "Api": "describeInstances",
+        "InstanceIds": "{{ InstanceIds }}",
+        "PropertySelector": "$.Reservations[*].Instances[*].State.Name",
+        "DesiredValues": ["running"]
+      }
+    },
+    {
+      "name": "patchInstances",
+      "action": "aws:runCommand",
+      "inputs": {
+        "DocumentName": "AWS-RunPatchBaseline",
+        "InstanceIds": "{{ InstanceIds }}",
+        "Parameters": {
+          "Operation": ["Install"]
+        }
+      }
+    }
+  ]
+}

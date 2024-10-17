@@ -1,0 +1,31 @@
+name: Branch Name Check
+
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  check-branch-name:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Validate branch name
+        run: |
+          allowed_patterns=("feature/*" "bugfix/*" "hotfix/*" "release/*" "use-cases")
+          current_branch=${GITHUB_REF#refs/heads/}
+
+          for pattern in "${allowed_patterns[@]}"; do
+            if [[ "$current_branch" == $pattern ]]; then
+              exit 0
+            fi
+          done
+
+          echo "Error: Branch name '$current_branch' does not follow the allowed naming conventions."
+          echo "Allowed patterns are: ${allowed_patterns[*]}"
+          exit 1

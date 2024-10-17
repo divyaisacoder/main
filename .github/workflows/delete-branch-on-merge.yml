@@ -1,0 +1,20 @@
+name: Delete Branch on Merge
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  delete-branch:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          branch_name=${{ github.event.pull_request.head.ref }}
+          repo_name=${{ github.repository }}
+          echo "Deleting branch $branch_name from repository $repo_name"
+          curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
+            "https://api.github.com/repos/$repo_name/git/refs/heads/$branch_name"

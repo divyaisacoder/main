@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - '*'
-  pull_request:
-    branches:
-      - '*'
 
 jobs:
   check-branch-name:
@@ -17,7 +14,7 @@ jobs:
 
       - name: Validate branch name
         run: |
-          allowed_patterns=("feature/*" "bugfix/*" "hotfix/*" "release/*" "use-cases" "main")
+          allowed_patterns=("feature/*" "bugfix/*" "hotfix/*" "release/*" "use-case/*" "main")
           current_branch=${GITHUB_REF#refs/heads/}
 
           for pattern in "${allowed_patterns[@]}"; do

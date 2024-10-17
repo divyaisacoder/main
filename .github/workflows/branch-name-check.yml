@@ -17,7 +17,7 @@ jobs:
 
       - name: Validate branch name
         run: |
-          allowed_patterns=("feature/*" "bugfix/*" "hotfix/*" "release/*" "use-cases")
+          allowed_patterns=("feature/*" "bugfix/*" "hotfix/*" "release/*" "use-cases" "main")
           current_branch=${GITHUB_REF#refs/heads/}
 
           for pattern in "${allowed_patterns[@]}"; do
